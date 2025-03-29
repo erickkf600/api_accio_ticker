@@ -18,8 +18,8 @@ cd api_accio_ticker
 ```
 2️⃣ **Crie um ambiente virtual (opcional):**  
 ```bash
-python -m venv venv
-source venv\Scripts\activate  # No Linux/Mac: source  venv/bin/activate
+python -m venv venv # Caso seja python3: python3 -m venv venv
+source venv\Scripts\activate  # No Linux/Mac: source venv/bin/activate
 ```
 
 3️⃣ **Instale as dependências:**
