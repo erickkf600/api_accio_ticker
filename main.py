@@ -66,4 +66,4 @@ def get_tickers_api():
         
 
 
-app.run()
+app.run(port=5000)
