@@ -1,7 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 from typing import List, Dict
+from cache_decorator import cache_memory
 
+@cache_memory(maxsize=100)
 def fetch_proventos(papeis_tipos: List[Dict[str, int]], ano: str = None) -> List[Dict[str, List[Dict[str, str]]]]:
     resultados = []
     
