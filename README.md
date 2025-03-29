@@ -27,8 +27,21 @@ source venv\Scripts\activate  # No Linux/Mac: source  venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-4️⃣ **Inicie a API:**
 
+4️⃣ **Inicie a API:**
+```bash
+python main.py
+```
+
+## 🚀 Executando em Produção  
+
+Para rodar a API em um ambiente de produção, utilize um servidor WSGI como **Gunicorn**.
+
+```bash
+gunicorn main:app
+```
+
+### 1️⃣ Instale o Gunicorn (se ainda não tiver)  
 
 ## 🔗 **Rotas Disponíveis**  
 
