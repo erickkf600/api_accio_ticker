@@ -33,6 +33,14 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## 🚀 Executando com docker  
+
+Para rodar a API em um container docker, com o ambiente de docker ja configurado na maquina, basta executar o comando
+
+```bash
+docker-compose up
+```
+
 ## 🚀 Executando em Produção  
 
 Para rodar a API em um ambiente de produção, utilize um servidor WSGI como **Gunicorn**.
