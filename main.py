@@ -1,9 +1,15 @@
 from flask import Flask, request, jsonify
 from proventos import fetch_proventos
 from ticker_data import fetch_ticker_price
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
+load_dotenv()
 app.config['JSON_SORT_KEYS'] = False
+
+DEBUG = os.getenv("FLASK_DEBUG", "True").lower() in ("true", "1", "yes")
+PORT = int(os.getenv("FLASK_PORT", 4444))
 
 @app.route('/', methods=['GET'])
 def works_api(): 
@@ -38,8 +44,9 @@ def get_proventos_api():
                 return jsonify({"error": "A chave 'tipo' deve ser um número inteiro (1 ou 2)."}), 400
 
         # Recupera o ano (opcional)
-        ano = request_data.get('ano')
-        resultado = fetch_proventos(data, ano)
+        start_date = request_data.get('dataInicio')
+        end_date = request_data.get('dataFim')
+        resultado = fetch_proventos(data,  start_date, end_date)
         return jsonify(resultado), 200
     
     
@@ -56,7 +63,7 @@ def get_tickers_api():
 
          # Divide os tickers corretamente
         tickers = raw_tickers.split("-")
-        
+       
         resultado = fetch_ticker_price(tickers)
         return jsonify(resultado), 200
     
@@ -64,6 +71,4 @@ def get_tickers_api():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
         
-
-
-app.run(host='0.0.0.0', port=4444)
+app.run(host='0.0.0.0', port=PORT, debug=DEBUG)
