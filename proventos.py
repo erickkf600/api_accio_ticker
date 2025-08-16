@@ -2,9 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 from cache_decorator import cache_memory
-from datetime import datetime
+from datetime import datetime, timedelta
 from ticker_data_history import fetch_ticker_history_price
-from flask import jsonify
 
 @cache_memory(maxsize=100)
 def fetch_proventos(
@@ -14,7 +13,10 @@ def fetch_proventos(
 ) -> List[Dict[str, List[Dict[str, str]]]]:
     resultados = []
     
-    tickerQuery = '-'.join(item['papel'] for item in papeis_tipos)
+    if not start_date or not end_date:
+        raise ValueError("Necessário inserir data de inicio e fim")
+    
+    # tickerQuery = '-'.join(item['papel'] for item in papeis_tipos)
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201",
         "Accept": "text/html, text/plain, text/css, text/sgml, */*;q=0.01"
@@ -57,7 +59,7 @@ def fetch_proventos(
                         except ValueError:
                             continue  # Pula datas inválidas
 
-                        # Verifica se a data está no intervalo (se os filtros foram fornecidos)
+                        # Verifica se a data está no intervalo
                         incluir_provento = True
                         if start_dt or end_dt:
                             incluir_provento = False
@@ -69,15 +71,22 @@ def fetch_proventos(
                                 incluir_provento = data_pagamento <= end_dt
 
                         if incluir_provento:
-                            # TODO descobrir um jeito de trazer o calculo de porcentagem (formula abaixo )
-                            # (valor / valor_base) * 100
-                            # startEndDate = datetime.strptime(data_com, "%d/%m/%Y").strftime("%Y-%m-%d")
-                            # baseValue = fetch_ticker_history_price(tickerQuery, startEndDate, startEndDate)
-                            # print(baseValue)
+                            startDate = datetime.strptime(data_com, "%d/%m/%Y").strftime("%Y-%m-%d")
+                            endDate = (datetime.strptime(data_com, "%d/%m/%Y") + timedelta(days=1)).strftime("%Y-%m-%d")
+                            baseValue = fetch_ticker_history_price([papel], startDate, endDate)
+                            
+                            # Pega o valor base do ticker
+                            valor_base_str = baseValue[0]["valores"][0]["valor"]
+                            valor_base_float = float(valor_base_str.replace(",", "."))
+                            # Converte o valor do provento
+                            valor_float = float(valor.replace(",", "."))
+                            # Calcula percentual
+                            percentual = (valor_float / valor_base_float) * 100
                             proventos_papel.append({
-                                "value": valor,
+                                "value": float(valor.replace(",", ".")),
                                 "payment_date": data_pagamento_str,  # Mantém o formato original
                                 "date_com": data_com,
+                                "percent": f"{percentual:.2f}"
                             })
 
                 # Adiciona o grupo de proventos para o papel atual

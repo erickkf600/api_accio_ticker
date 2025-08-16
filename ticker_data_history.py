@@ -4,57 +4,116 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import yfinance as yf
 from datetime import datetime
+import json
 
 
 @cache_memory(maxsize=100)
 def fetch_ticker_history_price(tickers, start_date: str, end_date: str):
-    resultados = []
+    tickers_sa = [ticker + ".SA" for ticker in tickers]
     if not start_date or not end_date:
         raise ValueError("Necessário inserir data de inicio e fim")
     if start_date > end_date:
         raise ValueError("A data de início não pode ser posterior à data final")
+    
+    df = yf.download(tickers_sa, start=start_date, end=end_date, auto_adjust=False)
+    
+    # Pega só o Close e reseta o índice (pra ter a coluna Date)
+    close_df = df["Close"].reset_index()
+    close_df["Date"] = close_df["Date"].dt.strftime("%Y-%m-%d")
+    
+    result = [
+        {
+            "ticker": ticker.replace(".SA", ""),
+            "valores": [
+                {"data": row["Date"], "valor": f"{row[ticker]:.2f}"}
+                for _, row in close_df.iterrows()
+            ]
+        }
+        for ticker in close_df.columns if ticker != "Date"
+    ]
+    
+    return result
+    # close_df = df["Close"]
+    # close_df = close_df.reset_index()
+    # json_data = close_df.to_dict(orient="records")
+    # result = []
+    
+    # for ticker in close_df.columns:
+    #     valores = [
+    #         {"data": date, "valor": f"{close_df.loc[date, ticker]:.2f}"}
+    #         for date in close_df.index
+    #     ]
+    #     result.append({
+    #         "ticker": ticker.replace(".SA", ""),  # Remove .SA
+    #         "valores": valores
+    #     }) 
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201",
-        "Accept": "text/html, text/plain, text/css, text/sgml, */*;q=0.01"
-    }
-    for ticker in tickers:
-        try:
-            ticker_completo = ticker + '.SA'
-            url = f"https://finance.yahoo.com/quote/{ticker_completo}/history"
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()  # levanta erro se status != 200
+    # for ticker in close_df.columns:
+        # valores = [
+        #     {"data": date, "valor": f"{close_df.loc[date, ticker]:.2f}"}
+        #     for date in close_df.index
+        # ]
+    #     result.append({
+    #         "ticker": ticker.replace(".SA", ""),
+    #         "valores": valores
+    #     })
 
-            soup = BeautifulSoup(response.text, 'html.parser')
-            tabela = soup.find('table', {'class': 'yf-1jecxey'})
-            if tabela:
-                linhas = tabela.find_all('tr')[1:]
-                historico = []
-                for linha in linhas:
-                    colunas = linha.find_all('td')
-                    if colunas:
-                        date = datetime.strptime(colunas[0].text.strip(), "%b %d, %Y")
-                        formatted_date = date.strftime("%Y-%m-%d")
-                        filtrar = start_date <= formatted_date <= end_date
+    # return result
 
-                        if filtrar:     
-                            historico.append({
-                                "valor": colunas[4].text.strip(),
-                                "data": formatted_date
-                            })
+
+
+
+
+
+
+# def fetch_ticker_history_price(tickers, start_date: str, end_date: str):
+#     resultados = []
+#     if not start_date or not end_date:
+#         raise ValueError("Necessário inserir data de inicio e fim")
+#     if start_date > end_date:
+#         raise ValueError("A data de início não pode ser posterior à data final")
+
+#     headers = {
+#         "User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201",
+#         "Accept": "text/html, text/plain, text/css, text/sgml, */*;q=0.01"
+#     }
+#     for ticker in tickers:
+#         try:
+#             ticker_completo = ticker + '.SA'
+#             url = f"https://finance.yahoo.com/quote/{ticker_completo}/history"
+#             response = requests.get(url, headers=headers)
+#             response.raise_for_status()  # levanta erro se status != 200
+
+#             soup = BeautifulSoup(response.text, 'html.parser')
+#             tabela = soup.find('table', {'class': 'yf-1jecxey'})
+#             if tabela:
+#                 linhas = tabela.find_all('tr')[1:]
+#                 historico = []
+#                 for linha in linhas:
+#                     colunas = linha.find_all('td')
+#                     if colunas:
+#                         date = datetime.strptime(colunas[0].text.strip(), "%b %d, %Y")
+#                         formatted_date = date.strftime("%Y-%m-%d")
+#                         filtrar = start_date <= formatted_date <= end_date
+
+#                         if filtrar:     
+#                             historico.append({
+#                                 "valor": colunas[4].text.strip(),
+#                                 "data": formatted_date
+#                             })
                             
-                if historico: 
-                    resultados.append(historico)
+#                 if historico: 
+#                     resultados.append(historico)
                 
-        except Exception as e:
-            # registra o erro e continua o loop
-            print(f"Erro ao processar {ticker}: {e}")
-            resultados.append({
-                'ticker': ticker,
-                'error': f"Erro ao obter dados: {str(e)}"
-            })
+#         except Exception as e:
+#             # registra o erro e continua o loop
+#             print(f"Erro ao processar {ticker}: {e}")
+#             resultados.append({
+#                 'ticker': ticker,
+#                 'error': f"Erro ao obter dados: {str(e)}"
+#             })
 
-    return resultados
+#     return resultados
 
 
 
