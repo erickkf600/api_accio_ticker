@@ -3,7 +3,8 @@ from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 from cache_decorator import cache_memory
 from datetime import datetime
-
+from ticker_data_history import fetch_ticker_history_price
+from flask import jsonify
 
 @cache_memory(maxsize=100)
 def fetch_proventos(
@@ -13,6 +14,7 @@ def fetch_proventos(
 ) -> List[Dict[str, List[Dict[str, str]]]]:
     resultados = []
     
+    tickerQuery = '-'.join(item['papel'] for item in papeis_tipos)
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201",
         "Accept": "text/html, text/plain, text/css, text/sgml, */*;q=0.01"
@@ -67,10 +69,15 @@ def fetch_proventos(
                                 incluir_provento = data_pagamento <= end_dt
 
                         if incluir_provento:
+                            # TODO descobrir um jeito de trazer o calculo de porcentagem (formula abaixo )
+                            # (valor / valor_base) * 100
+                            # startEndDate = datetime.strptime(data_com, "%d/%m/%Y").strftime("%Y-%m-%d")
+                            # baseValue = fetch_ticker_history_price(tickerQuery, startEndDate, startEndDate)
+                            # print(baseValue)
                             proventos_papel.append({
                                 "value": valor,
                                 "payment_date": data_pagamento_str,  # Mantém o formato original
-                                "date_com": data_com
+                                "date_com": data_com,
                             })
 
                 # Adiciona o grupo de proventos para o papel atual

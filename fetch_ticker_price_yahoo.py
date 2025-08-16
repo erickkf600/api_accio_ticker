@@ -1,3 +1,4 @@
+
 import requests
 from bs4 import BeautifulSoup
 from typing import List, Dict
@@ -5,8 +6,6 @@ from cache_decorator import cache_memory
 
 @cache_memory(maxsize=100)
 def fetch_ticker_price_yahoo(tickers):
-    import requests
-    from bs4 import BeautifulSoup
 
     resultados = []
 

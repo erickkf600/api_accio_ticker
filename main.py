@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from proventos import fetch_proventos
 from ticker_data import fetch_ticker_price
+from ticker_data_history import fetch_ticker_history_price
 import os
 from dotenv import load_dotenv
 
@@ -70,5 +71,26 @@ def get_tickers_api():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-        
+  
+@app.route('/tickers/history', methods=['GET'])
+def get_tickers_history_api(): 
+    try:
+        raw_tickers = request.args.get("ticker", "")
+        startDate = request.args.get("start", "")
+        endDate = request.args.get("end", "")
+                
+        if not raw_tickers:
+            return jsonify({"error": "A requisição deve conter pelo menos um ticker no parâmetro 'ticker'."}), 400
+
+         # Divide os tickers corretamente
+        tickers = raw_tickers.split("-")
+       
+        resultado = fetch_ticker_history_price(tickers, startDate, endDate)
+        return jsonify(resultado), 200
+    
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 
+    
+           
 app.run(host='0.0.0.0', port=PORT, debug=DEBUG)
