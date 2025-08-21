@@ -18,9 +18,17 @@ def fetch_ticker_price(tickers):
                     'ticker': ticker,
                     'curPrc': round(current_price, 2)
                 })
-            else:     
+            else:  
+                results.append({
+                    'ticker': ticker,
+                    'curPrc': 0
+                })   
                 print(f"{ticker_completo} não encontrado, pulando...")
         except Exception as e:
+            results.append({
+                'ticker': ticker,
+                'curPrc': 0
+            })
             print(f"Erro ao buscar {ticker_completo}: {e}")
             continue
 
