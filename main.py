@@ -86,6 +86,7 @@ def get_tickers_history_api():
         tickers = raw_tickers.split("-")
        
         resultado = fetch_ticker_history_price(tickers, startDate, endDate)
+                
         return jsonify(resultado), 200
     
     
