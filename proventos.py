@@ -7,22 +7,28 @@ from datetime import datetime, timedelta
 from ticker_data_history import fetch_ticker_history_price
 
 # Função para parsear a tabela de proventos
-def parse_proventos(html: str, start_dt: datetime, end_dt: datetime, papel: str) -> List[Dict]:
+def parse_proventos(html: str, start_dt: datetime, end_dt: datetime, papel: str, tipo: int) -> List[Dict]:
     soup = BeautifulSoup(html, "lxml")
     tabela = soup.find("table", id="resultado")
     if not tabela or not tabela.tbody:
         return []
 
     proventos = []
+
     linhas = tabela.tbody.find_all("tr")
-    
     for linha in linhas:
         cols = [td.text.strip() for td in linha.find_all("td")]
-        if len(cols) != 4:
+
+        if tipo == 1 and len(cols) == 4:
+            data_com_str, tipo_str, data_pag_str, valor_str = cols
+
+        elif tipo == 2 and len(cols) == 5:
+            # nesse formato a ordem que você falou era diferente
+            data_com_str, valor_str, tipo_str, data_pag_str, _ = cols
+            
+        else:
             continue
-
-        data_com_str, tipo_str, data_pag_str, valor_str = cols
-
+             
         try:
             data_pag = datetime.strptime(data_pag_str, "%d/%m/%Y")
         except ValueError:
@@ -59,7 +65,7 @@ async def fetch_papel(session: aiohttp.ClientSession, papel: str, tipo: int, sta
     try:
         async with session.get(url, timeout=20) as response:
             html = await response.text()
-            proventos_papel = parse_proventos(html, start_dt, end_dt, papel)
+            proventos_papel = parse_proventos(html, start_dt, end_dt, papel, tipo)
     except Exception as e:
         print(f"Erro ao processar {papel}: {e}")
 
